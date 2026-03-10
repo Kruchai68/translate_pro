@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -60,16 +59,13 @@ font-size:30px;
 line-height:1.6;
 width:90%;
 height:220px;
-
 white-space:pre-wrap;
 word-break:break-word;
-
 overflow:hidden;
 text-align:left;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -94,7 +90,9 @@ text-align:left;
 
 <br>
 
-<button id="micBtn" onclick="toggleMic()">🎤 เปิดไมค์</button> <button id="speakBtn" onclick="manualSpeak()">🔊 อ่านออกเสียง</button> <button id="clearBtn" onclick="clearText()">🧹 ล้าง</button>
+<button id="micBtn" onclick="toggleMic()">🎤 เปิดไมค์</button>
+<button id="speakBtn" onclick="manualSpeak()">🔊 อ่านออกเสียง</button>
+<button id="clearBtn" onclick="clearText()">🧹 ล้าง</button>
 
 <h3>ข้อความต้นฉบับ</h3>
 <div id="original" class="box"></div>
@@ -107,21 +105,17 @@ text-align:left;
 let recognition
 let micOn=false
 let micAllowed=false
+
 let bufferText=""
 let translatedText=""
 
 window.onload = async function(){
 
 try{
-
 await navigator.mediaDevices.getUserMedia({audio:true})
-
 micAllowed=true
-
 }catch(e){
-
 alert("กรุณากด Allow Microphone")
-
 }
 
 }
@@ -161,13 +155,14 @@ recognition.interimResults=false
 
 recognition.onresult=function(event){
 
-let text=event.results[0][0].transcript
+let index = event.resultIndex
+let text = event.results[index][0].transcript
 
-bufferText+=" "+text
+bufferText += " " + text
 
-original.innerText=bufferText
+original.innerText = bufferText
 
-translate(bufferText)
+translate(text) // แปลเฉพาะข้อความใหม่
 
 checkFull()
 
@@ -205,21 +200,20 @@ let to=document.getElementById("to").value.split("-")[0]
 let url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(text)}`
 
 let res=await fetch(url)
-
 let data=await res.json()
 
-translatedText=data[0].map(x=>x[0]).join("")
+let newText=data[0].map(x=>x[0]).join("")
 
-translated.innerText=translatedText
+translatedText += " " + newText
+
+translated.innerText = translatedText
 
 }
 
 function checkFull(){
 
 if(original.scrollHeight > original.clientHeight){
-
 autoSpeak()
-
 }
 
 }
@@ -227,6 +221,8 @@ autoSpeak()
 function autoSpeak(){
 
 stopRecognition()
+
+speechSynthesis.cancel()
 
 let speech=new SpeechSynthesisUtterance(translatedText)
 
@@ -236,9 +232,12 @@ speech.onend=function(){
 
 clearText()
 
+if(micOn){
+startRecognition()
 }
 
-speechSynthesis.cancel()
+}
+
 speechSynthesis.speak(speech)
 
 }
